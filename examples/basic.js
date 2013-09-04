@@ -1,5 +1,5 @@
 // basic example. Drone can hook in here (event triggers command)
-var controller = require('../index');
+var controller = require('../leap-remote');
 
 controller.on('takeoff', function () {
   console.log('takeoff!!!');

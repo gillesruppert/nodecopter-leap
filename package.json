@@ -1,13 +1,23 @@
 {
-  "name": "leapmotion",
+  "name": "nodecopter-leapmotion",
   "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "control your drone with the Leap Motion controller",
+  "main": "leap-remote.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha"
   },
   "author": "Gilles Ruppert <gilles@madeofbytes.com>",
-  "license": "BSD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gillesruppert/nodecopter-leap.git"
+  },
+  "keywords": [
+    "nodecopter",
+    "ardrone",
+    "remote",
+    "leapmotion"
+  ],
+  "license": "MIT",
   "dependencies": {
     "leapjs": "~0.2.0",
     "underscore": "~1.5.1",

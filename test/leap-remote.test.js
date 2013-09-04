@@ -1,5 +1,5 @@
 var leap = require('leapjs');
-var lc = require('../index');
+var lc = require('../leap-remote');
 var expect = require('expect.js');
 
 describe('leapmotion', function () {
