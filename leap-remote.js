@@ -64,27 +64,28 @@ var hover = _.throttle(function hover () {
   console.log('HOVER');
 }, 500);
 
-function getFrontBack(value) {
+function frontBack(value) {
   //return console.log('frontback', value, calibration.lon);
   if (isSimilar(value, arguments.callee.lastValue, 5)) return;
   arguments.callee.lastValue = value;
+  var _scale = _.partial(scale, calibration.lon, 80);
 
-  if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0);
-  if (value > calibration.lon) return emitter.emit('front', value);
-  if (value < calibration.lon) return emitter.emit('back', value);
+  if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0, 'middle', value);
+  if (value > calibration.lon) return emitter.emit('front', _scale(value));
+  if (value < calibration.lon) return emitter.emit('back', _scale(value));
 }
 
-function getLeftRight() {
+function leftRight(value) {
 }
 
-function getUpDown() {
+function upDown(value) {
 }
 
-function getTurn() {
+function turn(value) {
 }
 
 var control = _.throttle(function control(hand) {
-  getFrontBack(normalise(hand.palmNormal[2]));
+  frontBack(normalise(hand.palmNormal[2]));
 
   // hand#palmNormal
   // array of 3 numbers
@@ -147,8 +148,6 @@ function normalise(value) {
   return parseInt(100 * value, 10);
 }
 
-function scale(value) {
-  if (isMiddle(value)) return 0;
-  if (value <= 450) return (value - 450) / 450;
-  if (value >= 573) return (value - 573) / 450;
+function scale(min, max, value) {
+  return Math.abs(value - min) / max;
 }
