@@ -64,46 +64,53 @@ var hover = _.throttle(function hover () {
   console.log('HOVER');
 }, 500);
 
+
+// TODO: frontBack/leftRight can be partially applied into 1 function!
 function frontBack(value) {
-  //return console.log('frontback', value, calibration.lon);
   if (isSimilar(value, arguments.callee.lastValue, 5)) return;
   arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.lon, 80);
 
-  if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0, 'middle', value);
+  if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0);
   if (value > calibration.lon) return emitter.emit('front', _scale(value));
   if (value < calibration.lon) return emitter.emit('back', _scale(value));
 }
 
 function leftRight(value) {
+  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  arguments.callee.lastValue = value;
+  var _scale = _.partial(scale, calibration.lat, 80);
+
+  if (isSimilar(value, calibration.lat)) return emitter.emit('left', 0);
+  if (value > calibration.lat) return emitter.emit('left', _scale(value));
+  if (value < calibration.lat) return emitter.emit('right', _scale(value));
 }
 
 function upDown(value) {
+  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  arguments.callee.lastValue = value;
+  var _scale = _.partial(scale, calibration.ver, 20);
+
+  if (isSimilar(value, calibration.ver, 5)) return emitter.emit('up', 0);
+  if (value > calibration.ver) return emitter.emit('up', _scale(value, true));
+  if (value < calibration.ver) return emitter.emit('down', _scale(value, true));
 }
 
 function turn(value) {
+  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  arguments.callee.lastValue = value;
+  var _scale = _.partial(scale, calibration.hor, 20);
+
+  if (isSimilar(value, calibration.hor, 5)) return emitter.emit('clockwise', 0);
+  if (value > calibration.hor) return emitter.emit('clockwise', _scale(value, true));
+  if (value < calibration.hor) return emitter.emit('counterClockwise', _scale(value, true));
 }
 
 var control = _.throttle(function control(hand) {
   frontBack(normalise(hand.palmNormal[2]));
-
-  // hand#palmNormal
-  // array of 3 numbers
-  // X.
-  //  * 0.0 < 0.2 -> normal
-  //  * 0.2 - 0.8 -> left
-  //  * 0.0 < -0.6 -> right
-  // Y. N/A
-  // Z.
-  //  * -0.19 - 0.19 -> normal
-  //  * 0.2 - 0.7 -> forward
-  //  * -0.2 - -0.9 -> back
-  //console.log('hand#palmNormal', hand.palmNormal);
-
-  // palmPosition.X -> negative == counterClockwise
-  // palmPosition.X -> positive == clockwise
-  // palmPosition Y -> mm of height
-  //console.log('hand#palmPosition', hand.palmPosition);
+  leftRight(normalise(hand.palmNormal[0]));
+  upDown(normalisePP(hand.palmPosition[1]));
+  turn(normalisePP(hand.palmPosition[0]));
 }, 30);
 
 
@@ -111,8 +118,9 @@ function processFrame(frame) {
   if (!frame.valid) return;
   if (!calibration) return calibrate(frame);
   var circleGest = getGesture(frame.gestures, 'circle');
-  if (circleGest && checkGesture(circleGest)) takeoffOrLand(circleGest);
+  if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
 
+  if (!flying) return;
   var hand = frame.hands[0];
   if (hand) control(hand);
   else if (controller.frame(5).hands.length < 1) hover();
@@ -148,6 +156,8 @@ function normalise(value) {
   return parseInt(100 * value, 10);
 }
 
-function scale(min, max, value) {
-  return Math.abs(value - min) / max;
+function scale(min, max, value, cap) {
+  var v = Math.abs(value - min);
+  if (cap && v > max) v = max;
+  return v / max;
 }
