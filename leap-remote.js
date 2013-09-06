@@ -49,29 +49,53 @@ function calibrate(frame) {
   var hand = frame.hands[0];
 
   calibration = {
-    position: hand.palmPosition,
-    palm: hand.palmNormal
+    ver: normalisePP(hand.palmPosition[1]),
+    hor: normalisePP(hand.palmPosition[0]),
+
+    lat: normalise(hand.palmNormal[0]),
+    lon: normalise(hand.palmNormal[1])
   };
   console.log('calibrated!', calibration);
 }
 
-function control(hand) {
+// make sure the function is not called continuously
+var hover = _.throttle(function hover () {
+  emitter.emit('stop');
+  console.log('HOVER');
+}, 500);
+
+function getFrontBack() {
+}
+
+function getLeftRight() {
+}
+
+function getUpDown() {
+}
+
+function getTurn() {
+}
+
+var control = _.throttle(function control(hand) {
   // hand#palmNormal
   // array of 3 numbers
-  // 1.
+  // X.
   //  * 0.0 < 0.2 -> normal
   //  * 0.2 - 0.8 -> left
   //  * 0.0 < -0.6 -> right
-  // 2. ?
-  // 3.
+  // Y. N/A
+  // Z.
   //  * -0.19 - 0.19 -> normal
   //  * 0.2 - 0.7 -> forward
   //  * -0.2 - -0.9 -> back
   //console.log('hand#palmNormal', hand.palmNormal);
 
+  // palmPosition.X -> negative == counterClockwise
+  // palmPosition.X -> positive == clockwise
   // palmPosition Y -> mm of height
   //console.log('hand#palmPosition', hand.palmPosition);
-}
+}, 30);
+
 
 function processFrame(frame) {
   if (!frame.valid) return;
@@ -81,6 +105,7 @@ function processFrame(frame) {
 
   var hand = frame.hands[0];
   if (hand) control(hand);
+  else if (controller.frame(5).hands.length < 1) hover();
 }
 
 
@@ -95,3 +120,26 @@ function start() {
 
 emitter._getGesture = getGesture;
 emitter.start = start;
+
+function isSimilar(value, compare, tolerance) {
+  tolerance = tolerance || 10;
+  return (Math.abs(value - compare) <= tolerance);
+}
+
+function isMiddle(value) {
+  return (value > 450 && value < 573);
+}
+
+function normalisePP(value) {
+  return parseInt(value / 10, 10);
+}
+
+function normalise(value) {
+  return parseInt(1000 * value, 10);
+}
+
+function scale(value) {
+  if (isMiddle(value)) return 0;
+  if (value <= 450) return (value - 450) / 450;
+  if (value >= 573) return (value - 573) / 450;
+}
