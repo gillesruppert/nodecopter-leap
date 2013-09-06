@@ -1,3 +1,5 @@
+/*jshint boss: true */
+
 var leap = require('leapjs');
 var _ = require('underscore');
 var direction = require('curtsy');
@@ -6,8 +8,13 @@ var EventEmitter = require('events').EventEmitter;
 var emitter = new EventEmitter();
 module.exports = emitter;
 
+var controller;
+
 // make sure we only send the takeoff and land commands once
 var flying = false;
+
+// calibrate the 1st time there is a hand
+var calibration = null;
 
 
 function checkGesture(gesture) {
@@ -35,17 +42,20 @@ function takeoffOrLand(gesture) {
   }
 }
 
-
-function processFrame(frame) {
-  if (!frame.valid) return;
-  var circleGest = getGesture(frame.gestures, 'circle');
-
-  if (circleGest && checkGesture(circleGest)) takeoffOrLand(circleGest);
-
+function calibrate(frame) {
+  if (frame.hands.length !== 1) return;
+  if (!calibrate._first) return (calibrate._first = frame);
+  if ((frame.id - calibrate._first.id) < 150) return;
   var hand = frame.hands[0];
 
-  if (!hand) return;
+  calibration = {
+    position: hand.palmPosition,
+    palm: hand.palmNormal
+  };
+  console.log('calibrated!', calibration);
+}
 
+function control(hand) {
   // hand#palmNormal
   // array of 3 numbers
   // 1.
@@ -63,9 +73,19 @@ function processFrame(frame) {
   //console.log('hand#palmPosition', hand.palmPosition);
 }
 
+function processFrame(frame) {
+  if (!frame.valid) return;
+  if (!calibration) return calibrate(frame);
+  var circleGest = getGesture(frame.gestures, 'circle');
+  if (circleGest && checkGesture(circleGest)) takeoffOrLand(circleGest);
+
+  var hand = frame.hands[0];
+  if (hand) control(hand);
+}
+
 
 function start() {
-  var controller = new leap.Controller({
+  controller = new leap.Controller({
     frameEventName: 'deviceFrame',
     enableGestures: true
   });
