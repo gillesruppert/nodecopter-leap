@@ -53,7 +53,7 @@ function calibrate(frame) {
     hor: normalisePP(hand.palmPosition[0]),
 
     lat: normalise(hand.palmNormal[0]),
-    lon: normalise(hand.palmNormal[1])
+    lon: normalise(hand.palmNormal[2])
   };
   console.log('calibrated!', calibration);
 }
@@ -64,7 +64,14 @@ var hover = _.throttle(function hover () {
   console.log('HOVER');
 }, 500);
 
-function getFrontBack() {
+function getFrontBack(value) {
+  //return console.log('frontback', value, calibration.lon);
+  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  arguments.callee.lastValue = value;
+
+  if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0);
+  if (value > calibration.lon) return emitter.emit('front', value);
+  if (value < calibration.lon) return emitter.emit('back', value);
 }
 
 function getLeftRight() {
@@ -77,6 +84,8 @@ function getTurn() {
 }
 
 var control = _.throttle(function control(hand) {
+  getFrontBack(normalise(hand.palmNormal[2]));
+
   // hand#palmNormal
   // array of 3 numbers
   // X.
@@ -135,7 +144,7 @@ function normalisePP(value) {
 }
 
 function normalise(value) {
-  return parseInt(1000 * value, 10);
+  return parseInt(100 * value, 10);
 }
 
 function scale(value) {
