@@ -1,5 +1,15 @@
+var arDrone = require('ar-drone');
+
+var client = arDrone.createClient();
+// make sure the client always calls disableEmergency() before taking off
+var takeoff = client.takeoff;
+client.takeoff = function (value) {
+  this.disableEmergency();
+  takeoff.call(this, value);
+};
+
 var cmds = [
-  'hover'
+  'stop'
 , 'takeoff'
 , 'land'
 , 'up'
@@ -20,6 +30,7 @@ var controller = require('../leap-remote');
 cmds.forEach(function (cmd) {
   controller.on(cmd, function (value) {
     console.log(cmd, value);
+    client[cmd](value);
   });
 });
 
