@@ -11,7 +11,8 @@ client.takeoff = function (value) {
 };
 
 // repl for emergency...
-client.createRepl();
+//client.createRepl();
+client.config('general:navdata_demo', 'FALSE');
 
 var cmds = [
   'stop'
@@ -40,7 +41,20 @@ cmds.forEach(function (cmd) {
   });
 });
 
-controller.registerClient(client);
 
-// once everything is ready, start the controller
-controller.start();
+client.once('navdata', function (navdata) {
+  if (!navdata.droneState.lowBattery) {
+    // once everything is ready, start the controller
+    console.log('START', navdata.demo && navdata.demo.batteryPercentage, '%');
+    controller.registerClient(client);
+    controller.start();
+  } else {
+    console.log('LOW BATTERY', navdata.demo.batteryPercentage, '%');
+  }
+});
+
+client.on('navdata', function (navdata) {
+  if (navdata.droneState.lowBattery) {
+    client.land();
+  }
+});
