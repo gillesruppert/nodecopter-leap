@@ -54,7 +54,7 @@ function calibrate(frame) {
 function resetCalibration() {
   calibration = null;
   calibrate._first = null;
-  console.log('--- calibration reset');
+  //console.log('--- calibration reset');
 }
 
 function takeoffOrLand(gesture) {
@@ -69,7 +69,7 @@ function takeoffOrLand(gesture) {
 
 function hover () {
   emitter.emit('stop');
-  console.log('HOVER');
+  //console.log('HOVER');
   resetCalibration();
 }
 
@@ -124,16 +124,17 @@ function control(hand) {
 
 function processFrame(frame) {
   if (!frame.valid) return;
+
+  var hand = frame.hands[0];
+  if (!hand) hover();
+
   if (!calibration) return calibrate(frame);
 
   var circleGest = getGesture(frame.gestures, 'circle');
   if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
 
   if (flying === false) return;
-
-  var hand = frame.hands[0];
-  if (hand) control(hand);
-  else hover();
+  control(hand);
 }
 
 
