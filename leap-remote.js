@@ -10,9 +10,6 @@ module.exports = emitter;
 
 var controller;
 
-// make sure we only send the takeoff and land commands once
-var flying = false;
-
 // calibrate the 1st time there is a hand
 var calibration = null;
 
@@ -31,22 +28,12 @@ function getGesture(gestures, type) {
 }
 
 
-function takeoffOrLand(gesture) {
-  var dir = direction(gesture).type;
-  if (dir === 'clockwise' && !flying) {
-    emitter.emit('takeoff');
-    flying = !flying;
-  } else if (dir === 'counter-clockwise' && flying) {
-    emitter.emit('land');
-    flying = !flying;
-  }
-}
-
 function calibrate(frame) {
   if (frame.hands.length !== 1) return;
   if (!calibrate._first) return (calibrate._first = frame);
   if ((frame.id - calibrate._first.id) < 150) return;
   var hand = frame.hands[0];
+  calibrate._first = null;
 
   calibration = {
     ver: normalisePP(hand.palmPosition[1]),
@@ -58,16 +45,27 @@ function calibrate(frame) {
   console.log('calibrated!', calibration);
 }
 
-// make sure the function is not called continuously
-var hover = _.throttle(function hover () {
+function resetCalibration() {
+  calibration = null;
+  calibrate._first = null;
+  console.log('--- calibration reset');
+}
+
+function takeoffOrLand(gesture) {
+  resetCalibration();
+  var dir = direction(gesture).type;
+  if (dir === 'clockwise') {
+    emitter.emit('takeoff');
+  } else if (dir === 'counter-clockwise') {
+    emitter.emit('land');
+  }
+}
+
+function hover () {
   emitter.emit('stop');
   console.log('HOVER');
-  // reset the calibration so next time the hand
-  // appears we don't have any issues
-  calibration = null;
-  console.log('--- calibration reset');
-}, 500);
-
+  resetCalibration();
+}
 
 // TODO: frontBack/leftRight can be partially applied into 1 function!
 function frontBack(value) {
@@ -110,21 +108,21 @@ function turn(value) {
   if (value < calibration.hor) return emitter.emit('counterClockwise', _scale(value, true));
 }
 
-var control = _.throttle(function control(hand) {
+function control(hand) {
   frontBack(normalise(hand.palmNormal[2]));
   leftRight(normalise(hand.palmNormal[0]));
   upDown(normalisePP(hand.palmPosition[1]));
   turn(normalisePP(hand.palmPosition[0]));
-}, 30);
+}
 
 
 function processFrame(frame) {
   if (!frame.valid) return;
   if (!calibration) return calibrate(frame);
+
   var circleGest = getGesture(frame.gestures, 'circle');
   if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
 
-  if (!flying) return;
   var hand = frame.hands[0];
   if (hand) control(hand);
   else if (controller.frame(5).hands.length < 1) hover();
