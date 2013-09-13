@@ -1,3 +1,5 @@
+// simple example of making the drone fly
+
 var arDrone = require('ar-drone');
 
 var client = arDrone.createClient();
