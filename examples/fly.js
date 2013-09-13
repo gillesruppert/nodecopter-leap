@@ -1,6 +1,7 @@
 // simple example of making the drone fly
 
 var arDrone = require('ar-drone');
+var log = require('../throttle-log')(500);
 
 var client = arDrone.createClient();
 // make sure the client always calls disableEmergency() before taking off
@@ -35,9 +36,9 @@ var controller = require('../leap-remote');
 
   // iterate over all the commands and bind them to the event listeners
 cmds.forEach(function (cmd) {
-  controller.on(cmd, function (value) {
-    console.log(cmd, value);
-    client[cmd](value);
+  controller.on(cmd, function (value, duration) {
+    log(cmd, value);
+    client[cmd](value, duration);
   });
 });
 

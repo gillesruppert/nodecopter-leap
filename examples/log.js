@@ -1,5 +1,7 @@
 // simple logging of the events emitted by the drone
 
+var log = require('../throttle-log')(200);
+
 var cmds = [
   'stop'
 , 'takeoff'
@@ -21,8 +23,8 @@ var controller = require('../leap-remote');
 
   // iterate over all the commands and bind them to the event listeners
 cmds.forEach(function (cmd) {
-  controller.on(cmd, function (value) {
-    console.log(cmd, value);
+  controller.on(cmd, function (value, duration) {
+    log(cmd, value, duration);
   });
 });
 
