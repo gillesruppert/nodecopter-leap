@@ -48,8 +48,8 @@ function calibrate(frame) {
   calibrate._first = null;
 
   calibration = {
-    ver: normalisePP(hand.palmPosition[1]),
-    hor: normalisePP(hand.palmPosition[0]),
+    ver: normaliseCm(hand.palmPosition[1]),
+    hor: normaliseCm(hand.palmPosition[0]),
 
     lat: normalise(hand.palmNormal[0]),
     lon: normalise(hand.palmNormal[2])
@@ -123,12 +123,12 @@ function turn(value) {
 function control(hand) {
   frontBack(normalise(hand.palmNormal[2]));
   leftRight(normalise(hand.palmNormal[0]));
-  turn(normalisePP(hand.palmPosition[0]));
-  upDown(normalisePP(hand.palmPosition[1]));
+  turn(normaliseCm(hand.palmPosition[0]));
+  upDown(normaliseCm(hand.palmPosition[1]));
 }
 
 function animate(punch) {
-  if (punch && normalisePP(punch.palmVelocity[2]) < -100 && !animateProgress) {
+  if (punch && normaliseCm(punch.palmVelocity[2]) < -100 && !animateProgress) {
     animateProgress = true;
     setTimeout(function () { animateProgress = false; }, 500);
     emitter.emit('animate', animations[0], 1000);
@@ -173,11 +173,7 @@ function isSimilar(value, compare, tolerance) {
   return (Math.abs(value - compare) <= tolerance);
 }
 
-function isMiddle(value) {
-  return (value > 450 && value < 573);
-}
-
-function normalisePP(value) {
+function normaliseCm(value) {
   return parseInt(value / 10, 10);
 }
 
