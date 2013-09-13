@@ -8,6 +8,9 @@ client.takeoff = function (value) {
   takeoff.call(this, value);
 };
 
+// repl for emergency...
+client.createRepl();
+
 var cmds = [
   'stop'
 , 'takeoff'
@@ -23,6 +26,7 @@ var cmds = [
 , 'animate'
 , 'animateLeds'
 ];
+
 // basic example. Drone can hook in here (event triggers command)
 var controller = require('../leap-remote');
 
