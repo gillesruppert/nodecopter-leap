@@ -95,7 +95,7 @@ function leftRight(value) {
 }
 
 function upDown(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  if (isSimilar(value, arguments.callee.lastValue, 1)) return;
   arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.ver, 20);
 
@@ -117,8 +117,8 @@ function turn(value) {
 function control(hand) {
   frontBack(normalise(hand.palmNormal[2]));
   leftRight(normalise(hand.palmNormal[0]));
-  upDown(normalisePP(hand.palmPosition[1]));
   turn(normalisePP(hand.palmPosition[0]));
+  upDown(normalisePP(hand.palmPosition[1]));
 }
 
 
@@ -129,11 +129,11 @@ function processFrame(frame) {
   var circleGest = getGesture(frame.gestures, 'circle');
   if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
 
-  if (!flying) return;
+  if (flying === false) return;
 
   var hand = frame.hands[0];
   if (hand) control(hand);
-  else if (controller.frame(5).hands.length < 1) hover();
+  else hover();
 }
 
 
