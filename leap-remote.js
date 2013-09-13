@@ -60,9 +60,9 @@ function resetCalibration() {
 function takeoffOrLand(gesture) {
   resetCalibration();
   var dir = direction(gesture).type;
-  if (dir === 'clockwise') {
+  if (dir === 'clockwise' && !flying) {
     emitter.emit('takeoff');
-  } else if (dir === 'counter-clockwise') {
+  } else if (dir === 'counter-clockwise' && flying) {
     emitter.emit('land');
   }
 }
@@ -128,6 +128,8 @@ function processFrame(frame) {
 
   var circleGest = getGesture(frame.gestures, 'circle');
   if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
+
+  if (!flying) return;
 
   var hand = frame.hands[0];
   if (hand) control(hand);
