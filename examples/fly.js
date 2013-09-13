@@ -40,5 +40,7 @@ cmds.forEach(function (cmd) {
   });
 });
 
+controller.registerClient(client);
+
 // once everything is ready, start the controller
 controller.start();

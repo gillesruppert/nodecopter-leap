@@ -8,16 +8,22 @@ var EventEmitter = require('events').EventEmitter;
 var emitter = new EventEmitter();
 module.exports = emitter;
 
-var controller;
+var controller, client, flying;
 
 // calibrate the 1st time there is a hand
 var calibration = null;
 
+function registerClient(drone) {
+  client = drone;
+  client.config('general:navdata_demo', 'FALSE');
+  client.on('navdata', function (navdata) {
+    flying = !!navdata.droneState.flying;
+  });
+}
 
 function checkGesture(gesture) {
   return gesture.progress > 1.9;
 }
-
 
 // get only the circle gesture from the gestures array
 function getGesture(gestures, type) {
@@ -138,8 +144,10 @@ function start() {
   controller.connect();
 }
 
+// expose methods
 emitter._getGesture = getGesture;
 emitter.start = start;
+emitter.registerClient = registerClient;
 
 function isSimilar(value, compare, tolerance) {
   tolerance = tolerance || 10;
