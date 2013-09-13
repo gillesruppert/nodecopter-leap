@@ -13,6 +13,12 @@ var controller, client, flying, animateProgress;
 // calibrate the 1st time there is a hand
 var calibration = null;
 
+// animationTypes
+var animations = [
+  'flipLeft',
+  'flipRight'
+];
+
 function registerClient(drone) {
   client = drone;
   client.config('general:navdata_demo', 'FALSE');
@@ -125,7 +131,7 @@ function animate(punch) {
   if (punch && normalisePP(punch.palmVelocity[2]) < -100 && !animateProgress) {
     animateProgress = true;
     setTimeout(function () { animateProgress = false; }, 500);
-    emitter.emit('animate', 'flipAhead', 1000);
+    emitter.emit('animate', animations[0], 1000);
     return true;
   }
 }
