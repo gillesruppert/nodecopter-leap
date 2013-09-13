@@ -8,7 +8,7 @@ var EventEmitter = require('events').EventEmitter;
 var emitter = new EventEmitter();
 module.exports = emitter;
 
-var controller, client, flying;
+var controller, client, flying, animateProgress;
 
 // calibrate the 1st time there is a hand
 var calibration = null;
@@ -58,10 +58,10 @@ function resetCalibration() {
 }
 
 function takeoffOrLand(gesture) {
-  resetCalibration();
   var dir = direction(gesture).type;
   if (dir === 'clockwise' && !flying) {
     emitter.emit('takeoff');
+    resetCalibration();
   } else if (dir === 'counter-clockwise' && flying) {
     emitter.emit('land');
   }
@@ -121,17 +121,27 @@ function control(hand) {
   upDown(normalisePP(hand.palmPosition[1]));
 }
 
+function animate(punch) {
+  if (punch && normalisePP(punch.palmVelocity[2]) < -100 && !animateProgress) {
+    animateProgress = true;
+    setTimeout(function () { animateProgress = false; }, 500);
+    emitter.emit('animate', 'flipAhead', 1000);
+    return true;
+  }
+}
 
 function processFrame(frame) {
   if (!frame.valid) return;
 
-  var hand = frame.hands[0];
-  if (!hand) hover();
-
-  if (!calibration) return calibrate(frame);
-
   var circleGest = getGesture(frame.gestures, 'circle');
   if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
+
+  var hand = frame.hands[0];
+  var punch = frame.hands[1];
+
+  if (animate(punch)) return;
+  if (!hand) return hover();
+  if (!calibration) return calibrate(frame);
 
   if (flying === false) return;
   control(hand);
