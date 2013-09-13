@@ -62,6 +62,10 @@ function calibrate(frame) {
 var hover = _.throttle(function hover () {
   emitter.emit('stop');
   console.log('HOVER');
+  // reset the calibration so next time the hand
+  // appears we don't have any issues
+  calibration = null;
+  console.log('--- calibration reset');
 }, 500);
 
 
