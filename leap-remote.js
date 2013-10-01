@@ -81,8 +81,6 @@ function hover () {
 
 // TODO: frontBack/leftRight can be partially applied into 1 function!
 function frontBack(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
-  arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.lon, 80);
 
   if (isSimilar(value, calibration.lon)) return emitter.emit('front', 0);
@@ -91,8 +89,6 @@ function frontBack(value) {
 }
 
 function leftRight(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
-  arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.lat, 80);
 
   if (isSimilar(value, calibration.lat)) return emitter.emit('left', 0);
@@ -101,8 +97,6 @@ function leftRight(value) {
 }
 
 function upDown(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 1)) return;
-  arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.ver, 20);
 
   if (isSimilar(value, calibration.ver, 5)) return emitter.emit('up', 0);
@@ -111,8 +105,6 @@ function upDown(value) {
 }
 
 function turn(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 1)) return;
-  arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.hor, 20);
 
   if (isSimilar(value, calibration.hor, 5)) return emitter.emit('clockwise', 0);
