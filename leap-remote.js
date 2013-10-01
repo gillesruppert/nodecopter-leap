@@ -111,7 +111,7 @@ function upDown(value) {
 }
 
 function turn(value) {
-  if (isSimilar(value, arguments.callee.lastValue, 5)) return;
+  if (isSimilar(value, arguments.callee.lastValue, 1)) return;
   arguments.callee.lastValue = value;
   var _scale = _.partial(scale, calibration.hor, 20);
 
@@ -131,7 +131,7 @@ function animate(punch) {
   if (punch && normaliseCm(punch.palmVelocity[2]) < -100 && !animateProgress) {
     animateProgress = true;
     setTimeout(function () { animateProgress = false; }, 500);
-    emitter.emit('animate', animations[0], 1000);
+    emitter.emit('animate', animations[0], 500);
     return true;
   }
 }
@@ -154,9 +154,10 @@ function processFrame(frame) {
 }
 
 
-function start() {
+function start(frameType) {
+  frameType = frameType || 'deviceFrame';
   controller = new leap.Controller({
-    frameEventName: 'deviceFrame',
+    frameEventName: frameType,
     enableGestures: true
   });
   controller.on('frame', processFrame);
@@ -169,7 +170,7 @@ emitter.start = start;
 emitter.registerClient = registerClient;
 
 function isSimilar(value, compare, tolerance) {
-  tolerance = tolerance || 10;
+  tolerance = tolerance || 15;
   return (Math.abs(value - compare) <= tolerance);
 }
 
