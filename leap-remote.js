@@ -19,24 +19,46 @@ var animations = [
   'flipRight'
 ];
 
+function start(frameType) {
+  frameType = frameType || 'deviceFrame';
+  controller = new leap.Controller({
+    frameEventName: frameType,
+    enableGestures: true
+  });
+  controller.on('frame', processFrame);
+  controller.connect();
+}
+
+function processFrame(frame) {
+  if (!frame.valid) return;
+
+  var circleGest = getGesture(frame.gestures, 'circle');
+  if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
+
+  var hand = frame.hands[0];
+  var punch = frame.hands[1];
+
+  if (animate(punch)) return;
+  if (!hand) return hover();
+  if (!calibration) return calibrate(frame);
+
+  if (flying === false) return;
+  control(hand);
+}
+
+function control(hand) {
+  frontBack(normalise(hand.palmNormal[2]));
+  leftRight(normalise(hand.palmNormal[0]));
+  turn(normaliseCm(hand.palmPosition[0]));
+  upDown(normaliseCm(hand.palmPosition[1]));
+}
+
 function registerClient(drone) {
   client = drone;
   client.config('general:navdata_demo', 'FALSE');
   client.on('navdata', function (navdata) {
     flying = !!navdata.droneState.flying;
   });
-}
-
-function checkGesture(gesture) {
-  return gesture.progress > 1.9;
-}
-
-// get only the circle gesture from the gestures array
-function getGesture(gestures, type) {
-  if (!gestures.length) return;
-  var types = _.pluck(gestures, 'type');
-  var index = types.indexOf(type);
-  if (index > -1) return gestures[index];
 }
 
 
@@ -61,6 +83,19 @@ function resetCalibration() {
   calibration = null;
   calibrate._first = null;
   //console.log('--- calibration reset');
+}
+
+
+function checkGesture(gesture) {
+  return gesture.progress > 1.9;
+}
+
+// get only the circle gesture from the gestures array
+function getGesture(gestures, type) {
+  if (!gestures.length) return;
+  var types = _.pluck(gestures, 'type');
+  var index = types.indexOf(type);
+  if (index > -1) return gestures[index];
 }
 
 function takeoffOrLand(gesture) {
@@ -112,13 +147,6 @@ function turn(value) {
   if (value < calibration.hor) return emitter.emit('counterClockwise', _scale(value, true));
 }
 
-function control(hand) {
-  frontBack(normalise(hand.palmNormal[2]));
-  leftRight(normalise(hand.palmNormal[0]));
-  turn(normaliseCm(hand.palmPosition[0]));
-  upDown(normaliseCm(hand.palmPosition[1]));
-}
-
 function animate(punch) {
   if (punch && normaliseCm(punch.palmVelocity[2]) < -100 && !animateProgress) {
     animateProgress = true;
@@ -128,33 +156,6 @@ function animate(punch) {
   }
 }
 
-function processFrame(frame) {
-  if (!frame.valid) return;
-
-  var circleGest = getGesture(frame.gestures, 'circle');
-  if (circleGest && checkGesture(circleGest)) return takeoffOrLand(circleGest);
-
-  var hand = frame.hands[0];
-  var punch = frame.hands[1];
-
-  if (animate(punch)) return;
-  if (!hand) return hover();
-  if (!calibration) return calibrate(frame);
-
-  if (flying === false) return;
-  control(hand);
-}
-
-
-function start(frameType) {
-  frameType = frameType || 'deviceFrame';
-  controller = new leap.Controller({
-    frameEventName: frameType,
-    enableGestures: true
-  });
-  controller.on('frame', processFrame);
-  controller.connect();
-}
 
 // expose methods
 emitter._getGesture = getGesture;
