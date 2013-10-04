@@ -1,6 +1,6 @@
 {
   "name": "nodecopter-leap",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "control your drone with the Leap Motion controller",
   "main": "leap-remote.js",
   "scripts": {
